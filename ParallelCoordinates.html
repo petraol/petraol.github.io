@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Assignment 1, Petra Olsson</title>
+    <!--link rel="stylesheet" href="style.css"-->
+    <style>
+    svg {
+        font: 10px sans-serif;
+    }
+    
+    .background path {
+        fill: none;
+        stroke: #ddd;
+        shape-rendering: crispEdges;
+    }
+    
+    .foreground path {
+        fill: none;
+        stroke: steelblue;
+    }
+    
+    .brush .extent {
+        fill-opacity: .3;
+        stroke: #fff;
+        shape-rendering: crispEdges;
+    }
+    
+    .axis line,
+    .axis path {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+    
+    .axis text {
+        text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+    }
+</style>
+</head>
+
+    
+    
+<body>
+    <script src="http://d3js.org/d3.v4.min.js"></script>
+    <script src="d3.parcoords.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="d3.parcoords.css">
+    <div id="names" class="parcoords" style="width:300px;height:150px;margin-left:950px"></div>
+    
+    <script>
+        
+                  // set margins according to Mike Bostock's convention
+        var margin = {
+                top: 50,
+                right: 20,
+                bottom: 30,
+                left: 50
+            },
+            width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+
+        // create x scale
+        var x = d3.scalePoint()
+            .range([0, width], 1);
+
+        // append SVG element to page
+        var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+        // load data asynchronously 
+        d3.csv("SelfIntroductionData.csv", function(d) {
+            // strip out relevant fields
+            var point = {};
+            point.color = Math.floor(Math.random()*16777215).toString(16);
+            point.alias = d.Alias;
+            point.visualization = Number(+d["How would you rate your Information Visualization skills?"]);
+            point.statistical = Number(+d["How would you rate your statistical skills?"]);
+            point.mathematics = Number(+d["How would you rate your mathematics skills?"]);
+            point.artistic = Number(+d["How would you rate your drawing and artistic skills?"]);
+            point.computer = Number(+d["How would you rate your computer usage skills?"]);
+            point.programming = Number(+d["How would you rate your programming skills?"]);
+            point.computer_graphics = Number(+d["How would you rate your computer graphics programming skills?"]);
+            point.hci_programming = Number(+d["How would you rate your human-computer interaction programming skills?"]);
+            point.evaluation = Number(+d["How would you rate your user experience evaluation skills?"]);
+            point.communication = Number(+d["How would you rate your communication skills?"]);
+            point.collaboration = Number(+d["How would you rate your collaboration skills?"]);
+            point.code_repository = Number(+d["How would you rate your code repository skills?"]);
+            return point;
+        }, function(error, data) {
+            
+            // object to hold the scale for each dimension
+            var scales = {};
+            var features = d3.keys(data[0]);
+            features.splice(0,2); //removes alias and color from features
+            
+            var names = [];
+               for (i = 0; i < data.length; i++) {
+                   var string = data[i].alias + '\n';
+                   var result = string.fontcolor(data[i].color);
+                    names.push(result);
+        } 
+             for (i = 0; i < names.length; i++) {
+                 document.getElementById("names").innerHTML += '<input type="checkbox">' + names[i] + '<br>';
+             }
+                
+            
+            // create a separate sclae for each y axis 
+            features.forEach(function(key) {
+                scales[key] = d3.scaleLinear()
+                    .range([height, 0])
+                    .domain([0, 10]);
+            });
+            
+            
+            // setup general line and axis functions
+            var line = d3.line();
+            var axis = d3.axisLeft();
+
+            // set domain of x scale
+            x.domain(features);
+
+            // create a path function
+            var path = function(d) {
+                return line(features.map(function(k) {
+                    return [x(k), scales[k](d[k])];
+                }));
+            }
+
+            // append the line to go through the axes
+            var num = 1;
+            for (i = 0; i < data.length; i++) { 
+                var line_plot = svg.append("g")
+                        .style("stroke", data[i].color)
+                        .style("fill", "none")
+                        .selectAll("path")
+                        .data([data[i]])
+                        .enter().append("path")
+                        .attr("d", path);
+            }
+            
+
+            // Add a group element for each dimension.
+            var g = svg.selectAll(".dimension")
+                .data(features)
+                .enter().append("g")
+                .attr("class", "dimension")
+                .attr("transform", function(d) {
+                    return "translate(" + x(d) + ")";
+                });
+
+            // append each y axis to the corresponding group
+            g.append("g")
+                .attr("class", "axis")
+                .each(function(d) {
+                    d3.select(this).call(axis.scale(scales[d]));
+                })
+                .append("text")
+                .style("text-anchor", "middle")
+                .attr("y", -9)
+                .text(function(d) {
+                    return d;
+                });
+        });  
+                               
+	</script>
+</body>
+
+</html>
