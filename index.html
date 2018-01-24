@@ -102,8 +102,10 @@
                    var result = string.fontcolor(data[i].color);
                     names.push(result);
         } 
-             for (i = 0; i < names.length; i++) {
-                 document.getElementById("names").innerHTML += '<input type="checkbox">' + names[i] + '<br>';
+            
+            document.getElementById("names").innerHTML += '<input type="checkbox" checked> Check all <br>';
+            for (i = 0; i < names.length; i++) {
+                 document.getElementById("names").innerHTML += '<input type="checkbox" checked>' + names[i] + '<br>';
              }
                 
             
