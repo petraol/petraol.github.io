@@ -45,11 +45,11 @@
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script src="d3.parcoords.js" type="text/javascript"></script>
     <link rel="stylesheet" type="text/css" href="d3.parcoords.css">
-    <div id="names" class="parcoords" style="width:200px;height:0px;margin-left:1100px"></div>
-    <div id="names_2" class="parcoords" style="width:200px;height:0px;margin-left:1300px"></div>
+    <div id="names" class="parcoords" style="width:300px;height:150px;margin-left:1050px"></div>
     
     <script>
-        // set marginsn
+        
+                  // set margins according to Mike Bostock's convention
         var margin = {
                 top: 50,
                 right: 20,
@@ -76,6 +76,7 @@
             var point = {};
             point.color = Math.floor(Math.random()*16777215).toString(16);
             point.alias = d.Alias;
+            point.checked = false;
             point.visualization = Number(+d["How would you rate your Information Visualization skills?"]);
             point.statistical = Number(+d["How would you rate your statistical skills?"]);
             point.mathematics = Number(+d["How would you rate your mathematics skills?"]);
@@ -97,32 +98,32 @@
             var features = d3.keys(data[0]);
             features.splice(0,2); //removes alias and color from features
             
-            //apends names and checkboces to canvas, with names in according color
-            for (i = 0; i < data.length; i++) {   
-                    var string = data[i].alias + '\n';
-                    var result = string.fontcolor(data[i].color)
-                    //puts them in two boxes
-                    if ( i < 83/2) {
-                         document.getElementById("names").innerHTML += '<input type="checkbox" class="myCheckbox" value="' + data[i].alias + '">' + result + '<br>'
-                    }
-                    else {
-                         document.getElementById("names_2").innerHTML += '<input type="checkbox"  class="myCheckbox" value="' + data[i].alias + '">' + result + '<br>'
-                    }
+
+            var names_color = [];
+               for (i = 0; i < data.length; i++) { //HÄÄÄÄÄÄÄÄR data.length
+                    names_color.push({name: data[i].alias, color: data[i].color})
                    
+        } 
+
+             for (i = 0; i < names_color.length; i++) {   
+                    var string = names_color[i].name + '\n';
+                    var result = string.fontcolor(names_color[i].color)
+
+                    document.getElementById("names").innerHTML += '<input type="checkbox"  class="myCheckbox" value="' + names_color[i].name + '">' + result + '<br>'
              }
                 
-            //makes the checkboxes to d3 objects
             name_text = d3.select("#names")
                   .append("text")
                   .property("border","1px");
               d3.selectAll(".myCheckbox").on("change",update);
               update();
             
-            // crates y axises 
+            // create a separate scale for each y axis 
             features.forEach(function(key) {
                 scales[key] = d3.scaleLinear()
                     .range([height, 0])
                     .domain([0, 10]);
+                    console.log('gör axlar')
             });
             
             // set domain of x scale
@@ -132,6 +133,8 @@
             var line = d3.line();
             var axis = d3.axisLeft();
 
+
+
             // create a path function
             var path = function(d) {
                 return line(features.map(function(k) {
@@ -139,6 +142,7 @@
                 }));
             }
 
+            
             // Add a group element for each dimension.
             var g = svg.selectAll(".dimension")
                 .data(features)
@@ -163,39 +167,42 @@
                     return d;
                 });
             
-            //takes awat the y axis showing
-            d3.selectAll("path").remove();
             
-            //uodate function that draw the lines checked
             function update(){
-                d3.selectAll("path").remove();
+                svg.selectAll("path").remove();
                 
-                //fins with lines are checked
-                var choices = [];
+                //var choices = [];
                 d3.selectAll(".myCheckbox").each(function(d){
                   cb = d3.select(this);
-                  if(cb.property("checked")){
-                      console.log(choices);
-                      for (i = 0; i < data.length; i++) {
-                          if (cb.property("value") == data[i].alias) {
-                              choices.push(data[i])
-                          } 
+                  for (i = 0; i < data.length; i++) {
+                      //console.log(data[i].checked);
+                      console.log(cb.property("value"));
+                      console.log(cb.property("checked"));
+                      if (cb.property("value") == data[i].alias) {
+                          if(cb.property("checked")) {
+                              data[i].checked = true;
+                          }
+                          else {
+                              data[i].checked = false;
+                          }
                       }
+
                   }
-                
-                    //draws the lines in the checked array
-                  for (i = 0; i < choices.length; i++) { 
+                  
+
+                for (i = 0; i < data.length; i++) { 
+                    if (data[i].checked = true) {
                      var line_plot = svg.append("g")
-                        .style("stroke", choices[i].color)
+                        .style("stroke", data[i].color)
                         .style("fill", "none")
                         .style("visibility", "visible")  //hidden
                         .selectAll("path")
-                        .data([choices[i]])
+                        .data([data[i]])
                         .enter().append("path")
                         .attr("d", path)
-                        .attr("class", "lines")
+                     }
                 
-                  }
+            }
                 });
             }
 
