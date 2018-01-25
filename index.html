@@ -2,7 +2,7 @@
 <html>
 
 <head>
-	<title>Assignment 1, Petra Olsson</title>
+	<title>Assignment index, Petra Olsson</title>
     <!--link rel="stylesheet" href="style.css"-->
     <style>
     svg {
@@ -45,7 +45,7 @@
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script src="d3.parcoords.js" type="text/javascript"></script>
     <link rel="stylesheet" type="text/css" href="d3.parcoords.css">
-    <div id="names" class="parcoords" style="width:300px;height:150px;margin-left:950px"></div>
+    <div id="names" class="parcoords" style="width:300px;height:150px;margin-left:1050px"></div>
     
     <script>
         
@@ -56,7 +56,7 @@
                 bottom: 30,
                 left: 50
             },
-            width = 960 - margin.left - margin.right,
+            width = 1000 - margin.left - margin.right,
             height = 500 - margin.top - margin.bottom;
 
         // create x scale
@@ -69,7 +69,7 @@
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-        
+
         // load data asynchronously 
         d3.csv("SelfIntroductionData.csv", function(d) {
             // strip out relevant fields
@@ -80,7 +80,7 @@
             point.statistical = Number(+d["How would you rate your statistical skills?"]);
             point.mathematics = Number(+d["How would you rate your mathematics skills?"]);
             point.artistic = Number(+d["How would you rate your drawing and artistic skills?"]);
-            point.computer = Number(+d["How would you rate your computer usage skills?"]);
+            point.computer_usage = Number(+d["How would you rate your computer usage skills?"]);
             point.programming = Number(+d["How would you rate your programming skills?"]);
             point.computer_graphics = Number(+d["How would you rate your computer graphics programming skills?"]);
             point.hci_programming = Number(+d["How would you rate your human-computer interaction programming skills?"]);
@@ -91,38 +91,48 @@
             return point;
         }, function(error, data) {
             
+            
             // object to hold the scale for each dimension
             var scales = {};
             var features = d3.keys(data[0]);
             features.splice(0,2); //removes alias and color from features
             
-            var names = [];
-               for (i = 0; i < data.length; i++) {
-                   var string = data[i].alias + '\n';
-                   var result = string.fontcolor(data[i].color);
-                    names.push(result);
+
+            var names_color = [];
+               for (i = 0; i < data.length; i++) { //HÄÄÄÄÄÄÄÄR data.length
+                    names_color.push({name: data[i].alias, color: data[i].color})
+                   
         } 
-            
-            document.getElementById("names").innerHTML += '<input type="checkbox" checked> Check all <br>';
-            for (i = 0; i < names.length; i++) {
-                 document.getElementById("names").innerHTML += '<input type="checkbox" checked>' + names[i] + '<br>';
+
+             for (i = 0; i < names_color.length; i++) {   
+                    var string = names_color[i].name + '\n';
+                    var result = string.fontcolor(names_color[i].color)
+
+                    document.getElementById("names").innerHTML += '<input type="checkbox"  class="myCheckbox" value="' + names_color[i].name + '" checked>' + result + '<br>'
              }
                 
+            name_text = d3.select("#names")
+                  .append("text")
+                  .property("border","1px");
+              d3.selectAll(".myCheckbox").on("change",update);
+              update();
             
-            // create a separate sclae for each y axis 
+            // create a separate scale for each y axis 
             features.forEach(function(key) {
                 scales[key] = d3.scaleLinear()
                     .range([height, 0])
                     .domain([0, 10]);
+                    console.log('gör axlar')
             });
             
+            // set domain of x scale
+            x.domain(features);
             
             // setup general line and axis functions
             var line = d3.line();
             var axis = d3.axisLeft();
 
-            // set domain of x scale
-            x.domain(features);
+
 
             // create a path function
             var path = function(d) {
@@ -131,19 +141,7 @@
                 }));
             }
 
-            // append the line to go through the axes
-            var num = 1;
-            for (i = 0; i < data.length; i++) { 
-                var line_plot = svg.append("g")
-                        .style("stroke", data[i].color)
-                        .style("fill", "none")
-                        .selectAll("path")
-                        .data([data[i]])
-                        .enter().append("path")
-                        .attr("d", path);
-            }
             
-
             // Add a group element for each dimension.
             var g = svg.selectAll(".dimension")
                 .data(features)
@@ -161,10 +159,43 @@
                 })
                 .append("text")
                 .style("text-anchor", "middle")
+                .style("fill", "black")
                 .attr("y", -9)
                 .text(function(d) {
                     return d;
                 });
+            
+            
+            function update(){
+                svg.selectAll("path").remove();
+                
+                var choices = [];
+                d3.selectAll(".myCheckbox").each(function(d){
+                  cb = d3.select(this);
+                  if(cb.property("checked")){
+                      console.log(choices);
+                      for (i = 0; i < data.length; i++) {
+                          if (cb.property("value") == data[i].alias) {
+                              choices.push(data[i])
+                          }
+                          
+                      }
+                  }
+
+                for (i = 0; i < choices.length; i++) { 
+                     var line_plot = svg.append("g")
+                        .style("stroke", choices[i].color)
+                        .style("fill", "none")
+                        .style("visibility", "visible")  //hidden
+                        .selectAll("path")
+                        .data([choices[i]])
+                        .enter().append("path")
+                        .attr("d", path)
+                
+            }
+                });
+            }
+
         });  
                                
 	</script>
