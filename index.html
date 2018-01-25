@@ -74,7 +74,8 @@
         d3.csv("SelfIntroductionData.csv", function(d) {
             // strip out relevant fields
             var point = {};
-            point.color = Math.floor(Math.random()*16777215).toString(16);
+            //point.color = Math.floor(Math.random()*16777215).toString(16);
+            point.color = "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);});
             point.alias = d.Alias;
             point.visualization = Number(+d["How would you rate your Information Visualization skills?"]);
             point.statistical = Number(+d["How would you rate your statistical skills?"]);
